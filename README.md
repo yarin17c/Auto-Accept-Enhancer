@@ -1,6 +1,6 @@
 # Match Auto Accept Extension
 
-A professional match auto-accept browser extension — built like Repeek for FACEIT.
+Auto-accept browser extension
 Smart panel, countdown overlay, sound alerts, and background customization.
 
 **By [yarin17c](https://github.com/yarin17c/PlayCS.gg-Auto-Accept-Enhancer)**
