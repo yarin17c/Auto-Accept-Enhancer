@@ -1,0 +1,286 @@
+/* ── Match Auto Accept — Injected Styles ── */
+
+/* ─── BG OVERLAY ─────────────────────────────────────── */
+#pca-bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+/* ─── HUD ────────────────────────────────────────────── */
+#pca-hud {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 10px;
+  background: rgba(6, 10, 18, 0.88);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 6px;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(0, 229, 255, 0.7);
+  cursor: grab;
+  user-select: none;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.08), 0 2px 8px rgba(0,0,0,0.6);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#pca-hud:active { cursor: grabbing; }
+
+#pca-hud.pca-hud-inactive {
+  border-color: rgba(80, 80, 80, 0.4);
+  color: rgba(100, 100, 100, 0.6);
+}
+
+#pca-hud.pca-hud-match {
+  border-color: rgba(255, 100, 0, 0.8);
+  box-shadow: 0 0 20px rgba(255, 100, 0, 0.3), 0 2px 8px rgba(0,0,0,0.6);
+  color: #ff9c40;
+}
+
+.pca-hud-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pca-dot-on {
+  background: #00e5ff;
+  box-shadow: 0 0 6px #00e5ff;
+  animation: pca-slow-pulse 2.5s ease-in-out infinite;
+}
+
+.pca-dot-off {
+  background: #444;
+  box-shadow: none;
+}
+
+.pca-dot-active {
+  background: #ff6400;
+  box-shadow: 0 0 8px #ff6400;
+}
+
+.pca-dot-pulse {
+  animation: pca-fast-pulse 0.5s ease-in-out infinite;
+}
+
+.pca-hud-label {
+  font-size: 9px;
+  opacity: 0.6;
+  letter-spacing: 0.12em;
+}
+
+.pca-hud-status {
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: right;
+}
+
+@keyframes pca-slow-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes pca-fast-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(1.4); }
+}
+
+/* ─── COUNTDOWN OVERLAY ──────────────────────────────── */
+#pca-countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  animation: pca-fade-in 0.3s ease;
+}
+
+.pca-overlay-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 64px;
+  background: rgba(6, 10, 20, 0.95);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 4px;
+  box-shadow:
+    0 0 60px rgba(0, 229, 255, 0.15),
+    0 0 120px rgba(0, 229, 255, 0.06),
+    inset 0 0 40px rgba(0, 229, 255, 0.03);
+  animation: pca-slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.pca-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  animation: pca-ring-expand 2s linear infinite;
+}
+.pca-radar-ring       { width: 120px; height: 120px; top: calc(50% - 60px); left: calc(50% - 60px); }
+.pca-ring2            { animation-delay: 1s; }
+
+.pca-overlay-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+  animation: pca-bounce 0.6s ease infinite alternate;
+}
+
+.pca-overlay-title {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: rgba(0, 229, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.pca-overlay-timer {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  color: #00e5ff;
+  text-shadow: 0 0 30px rgba(0, 229, 255, 0.6), 0 0 60px rgba(0, 229, 255, 0.3);
+  transition: color 0.3s, text-shadow 0.3s;
+  min-width: 2ch;
+  text-align: center;
+}
+
+.pca-overlay-timer.pca-urgent {
+  color: #ff4444;
+  text-shadow: 0 0 30px rgba(255, 68, 68, 0.7), 0 0 60px rgba(255, 68, 68, 0.4);
+  animation: pca-shake 0.1s ease infinite;
+}
+
+.pca-overlay-sub {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: rgba(255,255,255,0.3);
+  margin-top: -4px;
+}
+
+.pca-overlay-progress {
+  width: 200px;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.pca-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #00e5ff, #00aaff);
+  border-radius: 2px;
+  animation: pca-progress linear forwards;
+  transform-origin: right;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+}
+
+.pca-cancel-btn {
+  margin-top: 20px;
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  border-radius: 3px;
+  color: rgba(255, 80, 80, 0.7);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pca-cancel-btn:hover {
+  background: rgba(255, 60, 60, 0.1);
+  border-color: rgba(255, 60, 60, 0.8);
+  color: #ff4444;
+  box-shadow: 0 0 12px rgba(255, 60, 60, 0.2);
+}
+
+/* ─── FLASH EFFECTS ──────────────────────────────────── */
+.pca-screen-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999998;
+  background: rgba(0, 229, 255, 0.12);
+  pointer-events: none;
+  animation: pca-flash 0.6s ease forwards;
+}
+
+.pca-flash-success {
+  background: rgba(0, 255, 120, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pca-flash 1.2s ease forwards;
+}
+
+.pca-flash-success span {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 48px;
+  letter-spacing: 0.2em;
+  color: rgba(0, 255, 120, 0.9);
+  text-shadow: 0 0 30px rgba(0, 255, 120, 0.6);
+  animation: pca-zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── KEYFRAMES ──────────────────────────────────────── */
+@keyframes pca-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pca-slide-up {
+  from { transform: translateY(30px) scale(0.92); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+@keyframes pca-flash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes pca-zoom-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes pca-bounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+
+@keyframes pca-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+
+@keyframes pca-ring-expand {
+  from { transform: scale(0.3); opacity: 0.6; }
+  to   { transform: scale(3);   opacity: 0; }
+}
+
+@keyframes pca-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}

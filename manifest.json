@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Match Auto Accept",
+  "version": "1.0.0",
+  "description": "Auto-accept matches on your CS platform — smart panel, countdown overlay, background customization.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://playcs.gg/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://playcs.gg/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "match-autoaccept@extension",
+      "strict_min_version": "109.0"
+    }
+  }
+}
