@@ -2,7 +2,7 @@
 
 Auto-accept browser extension for Israeli CS2 Community 
 
-**Not affiliated with "PlayCS.gg"
+**Not affiliated with "PlayCS.gg"**
 
 Smart panel, countdown overlay, sound alerts, and background customization.
 
