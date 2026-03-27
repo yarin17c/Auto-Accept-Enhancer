@@ -1,5 +1,8 @@
 // popup.js — Match Auto Accept Management Panel
 
+const CASE_URL = 'https://playcs.gg/cases';
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 const TIMER_DESCRIPTIONS = {
   0:  ['INSTANT', 'Accepts immediately with no delay.'],
   1:  ['1 second', 'Very fast — barely any time to cancel.'],
@@ -25,6 +28,7 @@ chrome.storage.sync.get(null, (stored) => {
   settings = stored;
   renderAll();
   bindEvents();
+  initDailyCase();
 });
 
 chrome.storage.onChanged.addListener((changes) => {
@@ -249,4 +253,71 @@ function sendToContent(msg) {
       chrome.tabs.sendMessage(tabs[0].id, msg).catch(() => {});
     }
   });
+}
+
+// ─── DAILY CASE ──────────────────────────────────────────────────────────────
+let caseTimerInterval = null;
+
+function initDailyCase() {
+  renderCaseBtn();
+  document.getElementById('caseBtn').addEventListener('click', onCaseClick);
+
+  // Refresh display every second
+  caseTimerInterval = setInterval(renderCaseBtn, 1000);
+}
+
+function onCaseClick() {
+  chrome.storage.local.get({ caseAvailableAt: 0 }, ({ caseAvailableAt }) => {
+    const remaining = caseAvailableAt - Date.now();
+    if (remaining > 0) return; // still on cooldown
+    chrome.tabs.create({ url: CASE_URL });
+  });
+}
+
+function renderCaseBtn() {
+  chrome.storage.local.get({ caseAvailableAt: 0 }, ({ caseAvailableAt }) => {
+    const remaining = caseAvailableAt - Date.now();
+
+    const btn   = document.getElementById('caseBtn');
+    const title = document.getElementById('caseBtnTitle');
+    const sub   = document.getElementById('caseBtnSub');
+    const badge = document.getElementById('caseBadge');
+    const bar   = document.getElementById('caseCooldownBar');
+    const fill  = document.getElementById('caseCooldownFill');
+
+    if (!btn) return;
+
+    if (remaining <= 0) {
+      // Available
+      btn.classList.remove('on-cooldown');
+      title.textContent = 'OPEN FREE CASE';
+      sub.textContent   = caseAvailableAt === 0
+        ? 'Visit cases page to sync timer'
+        : 'Click to open — case is ready!';
+      badge.textContent = 'FREE';
+      bar.style.display = 'none';
+    } else {
+      // On cooldown — mirroring site timer
+      btn.classList.add('on-cooldown');
+      title.textContent = 'NEXT CASE IN';
+      sub.textContent   = 'Timer synced from site';
+      badge.textContent = formatCountdown(remaining);
+      bar.style.display = 'block';
+      // Progress: caseAvailableAt was set when scraper last saw the timer
+      // We don't know the original duration, approximate with 24h
+      const elapsed = COOLDOWN_MS - remaining;
+      const pct = Math.min(100, Math.max(0, (elapsed / COOLDOWN_MS) * 100));
+      fill.style.width = pct + '%';
+    }
+  });
+}
+
+function formatCountdown(ms) {
+  const totalSec = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
+  return `${s}s`;
 }

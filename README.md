@@ -1,9 +1,6 @@
 # Match Auto Accept Extension
 
-Auto-accept browser extension for Israeli CS2 Community 
-
-**Not affiliated with "PlayCS.gg"**
-
+A professional match auto-accept browser extension — built like Repeek for FACEIT.
 Smart panel, countdown overlay, sound alerts, and background customization.
 
 **By [yarin17c](https://github.com/yarin17c/PlayCS.gg-Auto-Accept-Enhancer)**

@@ -378,3 +378,57 @@
     }
   }
 })();
+
+// ─── CASES PAGE TIMER SCRAPER ───────────────────────────────────────────────
+(function () {
+  'use strict';
+
+  if (!location.pathname.startsWith('/cases')) return;
+
+  function scrapeAndStore() {
+    // Find the "until available" label using the exact class from the site
+    const label = document.querySelector('span.text-xs.text-muted-foreground');
+
+    if (!label) return; // not found yet, DOM not ready
+
+    const labelText = label.textContent.trim().toLowerCase();
+
+    if (labelText === 'until available') {
+      // Cooldown active — grab the sibling timer span
+      const timerEl = label.previousElementSibling
+        || label.parentElement?.querySelector('span.text-lg.font-bold.text-white');
+
+      if (!timerEl) return;
+
+      const ms = parseTimeString(timerEl.textContent.trim());
+      if (ms !== null) {
+        chrome.storage.local.set({ caseAvailableAt: Date.now() + ms });
+      }
+    } else if (labelText === 'available' || labelText === '') {
+      // Case is ready — clear the cooldown
+      chrome.storage.local.set({ caseAvailableAt: 0 });
+    }
+  }
+
+  function parseTimeString(str) {
+    if (!str) return null;
+    str = str.trim().toLowerCase();
+    let total = 0;
+    const h = str.match(/(\d+)\s*h/);
+    const m = str.match(/(\d+)\s*m/);
+    const s = str.match(/(\d+)\s*s/);
+    if (!h && !m && !s) return null;
+    if (h) total += parseInt(h[1]) * 3600;
+    if (m) total += parseInt(m[1]) * 60;
+    if (s) total += parseInt(s[1]);
+    return total * 1000;
+  }
+
+  scrapeAndStore();
+  setInterval(scrapeAndStore, 5000);
+
+  const observer = new MutationObserver(scrapeAndStore);
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+
+
