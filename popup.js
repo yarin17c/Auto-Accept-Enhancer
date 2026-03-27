@@ -302,10 +302,7 @@ function renderCaseBtn() {
       title.textContent = 'NEXT CASE IN';
       sub.textContent   = 'Timer synced from site';
       badge.textContent = formatCountdown(remaining);
-      bar.style.display = 'block';
-      // Progress: caseAvailableAt was set when scraper last saw the timer
-      // We don't know the original duration, approximate with 24h
-      const elapsed = COOLDOWN_MS - remaining;
+      bar.style.display = 'none';
       const pct = Math.min(100, Math.max(0, (elapsed / COOLDOWN_MS) * 100));
       fill.style.width = pct + '%';
     }
