@@ -386,27 +386,68 @@
   if (!location.pathname.startsWith('/cases')) return;
 
   function scrapeAndStore() {
-    // Find the "until available" label using the exact class from the site
-    const label = document.querySelector('span.text-xs.text-muted-foreground');
-
-    if (!label) return; // not found yet, DOM not ready
-
-    const labelText = label.textContent.trim().toLowerCase();
-
-    if (labelText === 'until available') {
-      // Cooldown active — grab the sibling timer span
-      const timerEl = label.previousElementSibling
-        || label.parentElement?.querySelector('span.text-lg.font-bold.text-white');
-
-      if (!timerEl) return;
-
-      const ms = parseTimeString(timerEl.textContent.trim());
-      if (ms !== null) {
-        chrome.storage.local.set({ caseAvailableAt: Date.now() + ms });
+    // ── Strategy 0: Toast notification "Available again: MM/DD/YYYY, HH:MM:SS PM" ──
+    // This is the most accurate source — fires right after a failed/successful open
+    const toastTexts = document.querySelectorAll('div.text-sm.opacity-90');
+    for (const el of toastTexts) {
+      const txt = el.textContent || '';
+      const match = txt.match(/available again[:\s]+([0-9/,: APM]+)/i);
+      if (match) {
+        const parsed = new Date(match[1].trim());
+        if (!isNaN(parsed.getTime())) {
+          // Site returns UTC time without timezone indicator — correct for local offset
+          const utcTimestamp = parsed.getTime() - (parsed.getTimezoneOffset() * 60 * 1000);
+          chrome.storage.local.set({ caseAvailableAt: utcTimestamp });
+          return;
+        }
       }
-    } else if (labelText === 'available' || labelText === '') {
-      // Case is ready — clear the cooldown
-      chrome.storage.local.set({ caseAvailableAt: 0 });
+    }
+
+    // ── Strategy 1: /cases page — "until available" label + timer span ──
+    const label = document.querySelector('span.text-xs.text-muted-foreground');
+    if (label) {
+      const labelText = label.textContent.trim().toLowerCase();
+      if (labelText === 'until available') {
+        const timerEl = label.previousElementSibling
+          || label.parentElement?.querySelector('span.text-lg.font-bold.text-white');
+        if (timerEl) {
+          const ms = parseTimeString(timerEl.textContent.trim());
+          if (ms !== null) {
+            chrome.storage.local.set({ caseAvailableAt: Date.now() + ms });
+            return;
+          }
+        }
+      } else if (labelText === 'available') {
+        chrome.storage.local.set({ caseAvailableAt: 0 });
+        return;
+      }
+    }
+
+    // ── Strategy 2: /cases/daily-case — "0 remaining" after opening ──
+    const allLeafEls = document.querySelectorAll('span, p');
+    for (const el of allLeafEls) {
+      if (el.children.length > 0) continue;
+      const txt = el.textContent.trim().toLowerCase();
+
+      if (txt === '0 remaining') {
+        const container = el.closest('[class]')?.parentElement || document.body;
+        const allText = container.textContent;
+        const timeMatch = allText.match(/(\d+h\s*)?(\d+m\s*)?\d+s/i);
+        if (timeMatch) {
+          const ms = parseTimeString(timeMatch[0]);
+          if (ms !== null && ms > 0) {
+            chrome.storage.local.set({ caseAvailableAt: Date.now() + ms });
+            return;
+          }
+        }
+        chrome.storage.local.set({ caseAvailableAt: Date.now() + (24 * 60 * 60 * 1000) });
+        return;
+      }
+
+      if (/^[1-9]\d*\s+remaining$/.test(txt)) {
+        chrome.storage.local.set({ caseAvailableAt: 0 });
+        return;
+      }
     }
   }
 
@@ -429,6 +470,66 @@
 
   const observer = new MutationObserver(scrapeAndStore);
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  // ── Auto-click Open Case if triggered from popup ──
+  if (location.pathname.startsWith('/cases/daily-case')) {
+    chrome.storage.local.get({ caseAutoClick: false }, ({ caseAutoClick }) => {
+      if (!caseAutoClick) return;
+      chrome.storage.local.set({ caseAutoClick: false }); // consume the flag
+      tryClickOpenCase();
+    });
+  }
+
+  function tryClickOpenCase() {
+    // Try immediately, then retry with MutationObserver until found
+    if (clickOpenCaseBtn()) return;
+
+    let attempts = 0;
+    const retryObserver = new MutationObserver(() => {
+      if (clickOpenCaseBtn()) {
+        retryObserver.disconnect();
+      } else if (++attempts > 60) {
+        retryObserver.disconnect(); // give up after ~30s
+      }
+    });
+    retryObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  function clickOpenCaseBtn() {
+    const buttons = document.querySelectorAll('button, [role="button"]');
+    for (const btn of buttons) {
+      const txt = btn.textContent.trim().toLowerCase();
+      if (txt.includes('open case') || txt.includes('open')) {
+        if (isClickable(btn)) {
+          btn.click();
+          // Start aggressive re-scraping right after click so the timer updates immediately
+          startPostClickScrape();
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function startPostClickScrape() {
+    // Scrape every 500ms for 10 seconds after the click to catch the new timer ASAP
+    let ticks = 0;
+    const interval = setInterval(() => {
+      scrapeAndStore();
+      if (++ticks >= 20) clearInterval(interval);
+    }, 500);
+  }
+
+  function isClickable(el) {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && style.opacity !== '0'
+      && !el.disabled;
+  }
 })();
 
 

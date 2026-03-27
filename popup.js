@@ -1,6 +1,6 @@
 // popup.js — Match Auto Accept Management Panel
 
-const CASE_URL = 'https://playcs.gg/cases';
+const CASE_URL = 'https://playcs.gg/cases/daily-case';
 const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const TIMER_DESCRIPTIONS = {
@@ -268,8 +268,8 @@ function initDailyCase() {
 
 function onCaseClick() {
   chrome.storage.local.get({ caseAvailableAt: 0 }, ({ caseAvailableAt }) => {
-    const remaining = caseAvailableAt - Date.now();
-    if (remaining > 0) return; // still on cooldown
+    if (caseAvailableAt > Date.now()) return; // on cooldown — do nothing
+    chrome.storage.local.set({ caseAutoClick: true });
     chrome.tabs.create({ url: CASE_URL });
   });
 }
